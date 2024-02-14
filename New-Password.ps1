@@ -3,11 +3,11 @@
 Creates a new random password, to replace Windows Powershell system.web.security GeneratePassword Method
 
 .DESCRIPTION
-The function takes 0-3 parameters to create a new random password. The length of the password, the minimum number of 
-special characters, and whether the output should be a secure string can all be specified.  The minimum password
-length is 12, the maximum is the Int32 limit and the password will always have at least 1 character from each character class; 
-uppercase, lowercase, numeric and special characters. The minimum special characters is 1 and the maximum is 3 less
-than the length, to accomodate for the other character class requirements.  
+The function takes 0-6 parameters to create a new random password. The length of the password, the minimum number of 
+each character class, and whether the output should be a secure string can all be specified.  The minimum password
+length is 4, the maximum is the Int32 limit and the password will always have at least 1 character from each character class; 
+uppercase, lowercase, numeric and special characters. If the sum of all of the minimum values is greater than the specified 
+length, the length will be increase to the sum of the minimum values.
 
 .NOTES
 Date Written: Oct-2021
@@ -37,54 +37,42 @@ Use the defaults of a length of 12 and 1 special character and output a secure s
 Function New-Password {
     [CmdletBinding()]
     param(
-        #Specifies the desired length of the password, 12 is the default.  Minimum length of 12
-        #This will be overridden if the sum of all the Min values is greater than length
-        [ValidateRange(12, [Int32]::MaxValue)]
-        [int] 
-        $Length = 12,
+        #Specifies the desired length of the password, 12 is the default.  Minimum length of 4, length will be overridden if the sum of all the Min values is greater
+        [ValidateRange(4, [Int32]::MaxValue)]
+        [int] $Length = 12,
         #string of allowed special characters
-        [string]
-        $Specials = '!@#$%^&*()_-+=[{]};:<>|./?',
+        [string] $Specials = '!@#$%^&*()_-+=[{]};:<>|./?',
         #Specifies the minimum number of Special characters in the password, 1 is the default. 
-        [int] 
-        $MinSpecial = 1,
+        [int] $MinSpecial = 1,
         #Specifies the minimum number of Upper Case characters in the password, 1 is the default. 
-        [int] 
-        $MinUpper = 1,
+        [int] $MinUpper = 1,
         #Specifies the minimum number of Lower Case characters in the password, 1 is the default. 
-        [int] 
-        $MinLower = 1,
+        [int] $MinLower = 1,
         #Specifies the minimum number of Numeric characters in the password, 1 is the default. 
-        [int] 
-        $MinDigit = 1,
+        [int] $MinDigit = 1,
         #Specifies the password to be output in plain text
-        [switch] 
-        $Insecure
+        [switch] $Insecure
     )
     
-    begin {
-        $Uppers='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        $Lowers='abcdefghijklmnopqrstuvwxyz'
-        $Digits='0123456789'
-        $CharacterList = @{
-            Upper = @{Elements=($Uppers); Min=$MinUpper}
-            Lower = @{Elements=($Lowers); Min=$MinLower}
-            Digit = @{Elements=($Digits); Min=$MinDigit}
-            Special = @{Elements=($Specials); Min=$MinSpecial}
-        }
-        $Length = ($($MinSpecial+$MinUpper+$MinLower+$MinDigit),$Length|Measure-Object -Maximum).Maximum
-        $CharacterList['All']= @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length - $CharacterList.Digit.Min - $CharacterList.Lower.Min - $CharacterList.Special.Min - $CharacterList.Upper.Min}
+    $Uppers='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    $Lowers='abcdefghijklmnopqrstuvwxyz'
+    $Digits='0123456789'
+    $CharacterList = @{
+      Upper = @{Elements=($Uppers); Min=$MinUpper}
+      Lower = @{Elements=($Lowers); Min=$MinLower}
+      Digit = @{Elements=($Digits); Min=$MinDigit}
+      Special = @{Elements=($Specials); Min=$MinSpecial}
     }
+    $Length = ($($MinSpecial+$MinUpper+$MinLower+$MinDigit),$Length|Measure-Object -Maximum).Maximum
+    $CharacterList['All']= @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length - $CharacterList.Digit.Min - $CharacterList.Lower.Min - $CharacterList.Special.Min - $CharacterList.Upper.Min}
+    
+    $Password=($CharacterList.Keys | ForEach-Object {
+      $Key=$_
+      If($CharacterList.$key.Min){(0..($CharacterList.$Key.Min-1)) | Foreach-object {
+        $CharacterList[$Key]['Elements'][$(get-random -minimum 0 -maximum $CharacterList[$Key]['Elements'].length)]
+      }} 
+    } | Get-Random -Count $Length) -join ""
 
-    process {
-        $Password=($CharacterList.Keys | ForEach-Object {
-            $Key=$_
-            If($CharacterList.$key.Min){(0..($CharacterList.$Key.Min-1)) | Foreach-object {
-                $CharacterList[$Key]['Elements'][$(get-random -minimum 0 -maximum $CharacterList[$Key]['Elements'].length)]
-            }} 
-        } | Get-Random -Count $Length) -join ""
-
-        If($Insecure){$Password}
-        Else{$Password | ConvertTo-SecureString -AsPlainText}
-    }
+    If($Insecure){$Password}
+    Else{$Password | ConvertTo-SecureString -AsPlainText}
 }
