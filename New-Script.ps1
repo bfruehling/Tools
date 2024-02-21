@@ -40,7 +40,7 @@ process {
     if (!(Test-Path $filename)) {
       if ($filename -notmatch '\.ps1$') { $filename = $filename + ".ps1"}
       Copy-Item $template $filename
-      code $filename
+      Invoke-Item $filename
     }
     else {
         Write-warning "$filename exists"
