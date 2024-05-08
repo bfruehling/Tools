@@ -40,6 +40,12 @@ Function New-Password {
         #Specifies the desired length of the password, 12 is the default.  Minimum length of 4, length will be overridden if the sum of all the Min values is greater
         [ValidateRange(4, [Int32]::MaxValue)]
         [int] $Length = 12,
+        #string of allowed uppercase characters
+        [string] $Uppers='ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        #string of allowed lowercase characters
+        [string] $Lowers='abcdefghijklmnopqrstuvwxyz',
+        #string of allowed digits
+        [string]  $Digits='0123456789',
         #string of allowed special characters
         [string] $Specials = '!@#$%^&*()_-+=[{]};:<>|./?',
         #Specifies the minimum number of Special characters in the password, 1 is the default. 
@@ -53,10 +59,7 @@ Function New-Password {
         #Specifies the password to be output in plain text
         [switch] $Insecure
     )
-    
-    $Uppers='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    $Lowers='abcdefghijklmnopqrstuvwxyz'
-    $Digits='0123456789'
+       
     $CharacterList = @{
       Upper = @{Elements=($Uppers); Min=$MinUpper}
       Lower = @{Elements=($Lowers); Min=$MinLower}
@@ -66,8 +69,7 @@ Function New-Password {
     $Length = ($($MinSpecial+$MinUpper+$MinLower+$MinDigit),$Length|Measure-Object -Maximum).Maximum
     $CharacterList['All']= @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length - $CharacterList.Digit.Min - $CharacterList.Lower.Min - $CharacterList.Special.Min - $CharacterList.Upper.Min}
     
-    $Password=($CharacterList.Keys | ForEach-Object {
-      $Key=$_
+    $Password=foreach ($Key in $CharacterList.Keys){
       If($CharacterList.$key.Min){(0..($CharacterList.$Key.Min-1)) | Foreach-object {
         $CharacterList[$Key]['Elements'][$(get-random -minimum 0 -maximum $CharacterList[$Key]['Elements'].length)]
       }} 
