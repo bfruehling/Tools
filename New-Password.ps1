@@ -57,7 +57,7 @@ Function New-Password {
         #Specifies the minimum number of Numeric characters in the password, 1 is the default. 
         [int] $MinDigit = 1,
         #Specifies the password to be output in plain text
-        [switch] $Insecure
+        [switch] $Secure
     )
        
     $CharacterList = @{
@@ -76,6 +76,6 @@ Function New-Password {
       }} 
     } | Get-Random -Count $Length) -join ""
 
-    If($Insecure){$Password}
+    If(!($Secure)){$Password}
     Else{$Password | ConvertTo-SecureString -AsPlainText}
 }
