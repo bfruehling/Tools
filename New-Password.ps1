@@ -18,8 +18,8 @@ Version:  1.0
 None, does not accept pipeline input
 
 .OUTPUTS
-System.Security.SecureString
-System.String if -insecure flag is used
+System.String
+System.Security.SecureString if -secure flag is used
 
 .EXAMPLE
 New-Password -length 20 -minspecial 5 
@@ -32,20 +32,20 @@ Set a length of 15 with at least 3 special characters and output as a secure str
 .EXAMPLE
 New-Password -length 40 -specials '-_.~'
 
-Generate a password with a length of 40 and using only the specified special characters
+Generate a password with a length of 40 and using only the specified special characters and default characters from the three other classes
 #>
 Function New-Password {
     [CmdletBinding()]
     param(
         #Specifies the desired length of the password, 12 is the default.  Minimum length of 4, length will be overridden if the sum of all the Min values is greater
-        [ValidateRange(4, [Int32]::MaxValue)]
+        [ValidateRange(4,[Int32]::MaxValue)]
         [int]$Length = 12,
         #string of allowed uppercase characters
-        [string]$Uppers='ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        [string]$Uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         #string of allowed lowercase characters
-        [string]$Lowers='abcdefghijklmnopqrstuvwxyz',
+        [string]$Lowers = 'abcdefghijklmnopqrstuvwxyz',
         #string of allowed numeric characters
-        [string]$Digits='0123456789',
+        [string]$Digits = '0123456789',
         #string of allowed special characters
         [string]$Specials = '!@#$%^&*()_-+=[{]};:<>|./?',
         #Specifies the minimum number of special characters in the password, 1 is the default. 
