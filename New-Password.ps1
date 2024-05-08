@@ -69,12 +69,11 @@ Function New-Password {
     $Length = ($($MinSpecial+$MinUpper+$MinLower+$MinDigit),$Length|Measure-Object -Maximum).Maximum
     $CharacterList['All']= @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length - $CharacterList.Digit.Min - $CharacterList.Lower.Min - $CharacterList.Special.Min - $CharacterList.Upper.Min}
     
-    $Password=($CharacterList.Keys | ForEach-Object {
-      $Key = $_
+    $Password=($(foreach($Key in $CharacterList.Keys) {
       If($CharacterList.$key.Min){(0..($CharacterList.$Key.Min-1)) | Foreach-object {
         $CharacterList[$Key]['Elements'][$(get-random -minimum 0 -maximum $CharacterList[$Key]['Elements'].length)]
       }} 
-    } | Get-Random -Count $Length) -join ""
+    }) | Get-Random -Count $Length) -join ""
 
     If(!($Secure)){$Password}
     Else{$Password | ConvertTo-SecureString -AsPlainText}
