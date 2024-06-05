@@ -49,14 +49,18 @@ Function New-Password {
         #string of allowed special characters
         [string]$Specials = '!@#$%^&*()_-+=[{]};:<>|./?',
         #Specifies the minimum number of special characters in the password, 1 is the default. 
+        [ValidateRange(1,[Int32]::MaxValue)]
         [int]$MinSpecial = 1,
         #Specifies the minimum number of upper case characters in the password, 1 is the default. 
+        [ValidateRange(1,[Int32]::MaxValue)]
         [int]$MinUpper = 1,
         #Specifies the minimum number of lower case characters in the password, 1 is the default. 
+        [ValidateRange(1,[Int32]::MaxValue)]
         [int]$MinLower = 1,
         #Specifies the minimum number of numeric characters in the password, 1 is the default. 
+        [ValidateRange(1,[Int32]::MaxValue)]
         [int]$MinDigit = 1,
-        #Specifies the password to be output in plain text
+        #Specifies the password to be output as a secure string
         [switch]$Secure
     )
        
