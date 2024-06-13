@@ -11,9 +11,7 @@
     Date Written: 07-Jun-2024
 
 .INPUTS
-    CurrentItemCount
-    TotalItemCount
-    CurrentStep
+    Parameters Only no pipeline input
 
 .OUTPUTS
     Progress Bar to Stdout
