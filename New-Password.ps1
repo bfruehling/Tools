@@ -64,14 +64,14 @@ Function New-Password {
         [switch]$Secure
     )
        
-    $CharacterList = @{
-      Upper = @{Elements=($Uppers); Min=$MinUpper}
-      Lower = @{Elements=($Lowers); Min=$MinLower}
-      Digit = @{Elements=($Digits); Min=$MinDigit}
-      Special = @{Elements=($Specials); Min=$MinSpecial}
-    }
     $Length = ($($MinSpecial+$MinUpper+$MinLower+$MinDigit),$Length|Measure-Object -Maximum).Maximum
-    $CharacterList['All']= @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length - $CharacterList.Digit.Min - $CharacterList.Lower.Min - $CharacterList.Special.Min - $CharacterList.Upper.Min}
+    $CharacterList = @{
+      Upper = @{Elements=$Uppers; Min=$MinUpper}
+      Lower = @{Elements=$Lowers; Min=$MinLower}
+      Digit = @{Elements=$Digits; Min=$MinDigit}
+      Special = @{Elements=$Specials; Min=$MinSpecial}
+      All = @{Elements=$Lowers+$Uppers+$Digits+$Specials; Min=$Length-$MinUpper-$MinLower-$MinDigit-$MinSpecial}
+    }
     
     $Password=($(foreach($Key in $CharacterList.Keys) {
       If($CharacterList.$key.Min){(0..($CharacterList.$Key.Min-1)) | Foreach-object {
