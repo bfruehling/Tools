@@ -19,11 +19,13 @@
     Progress Bar to Stdout
 
 .EXAMPLE
-    Show-ProgressETA -CurrentItemCount $i -TotalItemCount $total -CurrentStep "Processing $object"
+    $startTime = Get-Date
+    foreach ($item in $items) {
+      Show-ProgressETA -currentItemCount $items.IndexOf($item) -totalItemCount $items.count -currentStep $item -startTime $startTime
+    }
 
     Shows a progress bar with the current percent complete, the current step and an ETA to complete
 #>
-
 Function Show-ProgressETA {
   [CmdletBinding()]
   Param(
