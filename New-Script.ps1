@@ -36,8 +36,8 @@ Param(
 begin {
   $logfile = "$home\$($MyInvocation.MyCommand.Name)-$(get-date -Format FileDatetime).log"
   Start-Transcript -Path $logfile | out-host
-  if ($type eq "Script") { $template=".\data\template.ps1" } 
-  elseif ($type eq "Function") { $template = ".\data\function.ps1"}
+  if ($type -eq "Script") { $template="$PSScriptRoot\data\template.ps1" } 
+  elseif ($type -eq "Function") { $template = "$PSScriptRoot\data\function.ps1"}
 }
 
 process {
