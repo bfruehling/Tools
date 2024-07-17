@@ -47,4 +47,5 @@ Function Show-ProgressETA {
   $comppctDisp=[math]::round($CurrentItemCount/$TotalItemCount*100,1).ToString("0.0")
   if (!($CurrentStep)) { $currentStep = "$currentItemCount/$TotalItemCount"}
   write-progress -Status "$($currentStep)" -Activity "[$comppctDisp% Complete, ETA: $($ETA.ToString("dd-MMM-yyyy HH:mm"))]" -PercentComplete $comppctDisp
+  return $($currenttime - $starttime |select Hours,minutes,seconds)
 }
