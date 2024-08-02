@@ -24,6 +24,7 @@
 
     Shows a progress bar with the current percent complete, the current step and an ETA to complete
 #>
+
 Function Show-ProgressETA {
   [CmdletBinding()]
   Param(
@@ -37,15 +38,28 @@ Function Show-ProgressETA {
     [Parameter(Mandatory=$true)]
     [datetime]$startTime,
     #Active step being processed
-    [string]$currentStep
+    [string]$currentStep,
+    #passthru for nested progress bars
+    [int]$ID,
+    #passthru for nested progress bars
+    [int]$ParentId
   ) 
 
   $currentTime=Get-Date
-  $comppct = $CurrentItemCount/$TotalItemCount
-  $totalTime = [math]::round(($currentTime-$startTime).TotalSeconds/$comppct,2)
-  $ETA =  $startTime.AddSeconds($totalTime)
-  $comppctDisp=[math]::round($CurrentItemCount/$TotalItemCount*100,1).ToString("0.0")
+  $comppct=$CurrentItemCount/$TotalItemCount
+  if ($comppct -le 0) {
+    $totalTime=0.0
+    $ETA="Unknown"
+    $comppctDisp = "0.0"
+  }
+  else {
+    $totalTime=[math]::round(($currentTime-$startTime).TotalSeconds/$comppct,2)
+    $ETA=$startTime.AddSeconds($totalTime).ToString("dd-MMM-yyyy HH:mm")
+    $comppctDisp=[math]::round($comppct*100,1).ToString("0.0")
+  }
+
   if (!($CurrentStep)) { $currentStep = "$currentItemCount/$TotalItemCount"}
-  write-progress -Status "$($currentStep)" -Activity "[$comppctDisp% Complete, ETA: $($ETA.ToString("dd-MMM-yyyy HH:mm"))]" -PercentComplete $comppctDisp
+  if (-not($ParentId) -and -not($id)) { $ID=1}
+  write-progress -Status "$($currentStep)" -Activity "[$comppctDisp% Complete, ETA: $($ETA)]" -PercentComplete $comppctDisp -ParentId $ParentId -ID $ID
   return $($currenttime - $starttime |select Hours,minutes,seconds)
 }
