@@ -20,53 +20,75 @@
 .EXAMPLE
     $hashtable | ExportTo-XLS -Path $filepath.xlsx
 
-    export the hashtable to a spreadshee
+    export the hashtable to a spreadsheet
 #>
 
 # Requires -Modules @{ ModuleName="ImportExcel"; ModuleVersion="7.8.9"} 
+# require excel
 Function ExportTo-XLS {
   [CmdletBinding()]
     Param(
         #<parameter comment>
+        [Parameter(ValueFromPipeline=$true,Mandatory=$true)]
+        [psobject[]]$inputObject,
         [Parameter(ValueFromPipelineByPropertyName,Mandatory=$true)]
-        [hashtable]$InputObject,
-        [Parameter(ValueFromPipelineByPropertyName,Mandatory=$true)]
-        [string]$Path
+        [string]$path
     ) 
-    
-    #create xls based on path
-    $excel = New-Object -ComObject excel.application
-    $workbook = $excel.workbooks.Add()
-    foreach ($tab in $InputObject.Keys) {
-      #add tab to xls, try to autofit col if possible
-      $worksheet=$workbook.worksheets.add()
-      $worksheet.Name = $tab
-      #write header
-      $fields = $InputObject.$tab[0].psobject.properties
-      $col=0
-      foreach ($field in $fields) {
-        $row = 1
-        ++$col 
-        $worksheet.Cells.Item($row,$col) = $field.Name
-      }
-      foreach ($obj in $InputObject.$tab) {
-        $row = $InputObject.$tab.IndexOf($obj)+2
-        foreach ($prop in $obj.psobject.properties) {
-          #find col in row one that matches prop name
-          $col = $worksheet.rows(1).Find($prop.Name).Column
-          if ($prop.TypeNameOfValue -match 'System.Collections.Generic.List') { $value = $prop.Value -join "," }
-          else { $value = $prop.Value }
-          $worksheet.Cells.Item($row,$col) = $Value
+    begin { 
+      $inputTable=@{}
+      $inputtable.objects=@()
+      #create xls
+      $excel = New-Object -ComObject "Excel.Application"
+      $excel.visible = $true
+      $excelWinHwnd = $excel.Hwnd
+      $process = Get-Process Excel | Where-Object {$_.MainWindowHandle -eq $excelWinHwnd}
+      $excelProcessId = $process.Id
+      $excel.Visible = $false
+      $workbook = $excel.workbooks.Add()
+      $workbook.SaveAs($path)
+    }
+
+    process {
+      #if no keys add create a new hashtable and add inputobject to it. otherwise, set the new hashtable equal to the inputobect
+      if(-not($inputObject.keys)) { $inputtable.objects+=$inputobject } 
+      else {$inputTable = $inputObject}
+    } 
+
+    end {
+      foreach ($tab in $InputTable.Keys) {
+        #add tab to xls
+        $worksheet=$workbook.worksheets.add()
+        $worksheet.Name = $tab
+        #write header row
+        $fields = $InputTable.$tab[0].psobject.properties
+        $col=0
+        foreach ($field in $fields) {
+          $row = 1
+          ++$col 
+          $worksheet.Cells.Item($row,$col) = $field.Name
+        }
+        $workbook.Save()
+        foreach ($obj in $InputTable.$tab) {
+          $row = $InputTable.$tab.IndexOf($obj)+2
+          foreach ($prop in $obj.psobject.properties) {
+            #find col in row one that matches prop name
+            $col = $worksheet.rows(1).Find($prop.Name).Column
+            if ($prop.TypeNameOfValue -match 'System.Collections.Generic.List') { $value = $prop.Value -join "," }
+            else { $value = $prop.Value }
+            $worksheet.Cells.Item($row,$col) = $Value
+          }
         }
         #adjusting the column width so all data’s properly visible
         $usedRange = $worksheet.UsedRange
         $usedRange.EntireColumn.AutoFit() | Out-Null
+        $workbook.Save()
       }
-    }
-    #not working
-    $workbook.worksheets.Item(1).Delete()
-    $workbook.SaveAs($path)
-    $workbook.Save()
-    #not working?
-    $excel.Quit()
+      #find and delete empty sheets, loop through each sheet check for no used range
+      for ($sheet=1; $sheet -le $workbook.sheets.count();++$sheet) {
+        if($workbook.sheets.item($sheet).UsedRange.rows.count -le 1) { $workbook.sheets.item($sheet).delete() }
+      }
+      $workbook.Save()
+      $excel.Quit()
+      Stop-Process -iD $excelProcessId
+  }
 }
