@@ -19,8 +19,8 @@
 
     Shows a progress bar with the current percent complete, the current step and an ETA to complete
 #>
+
 Function Show-ProgressETA {
-  [CmdletBinding()]
   Param(
     #current progress count
     [Parameter(Mandatory=$true)]
@@ -33,28 +33,28 @@ Function Show-ProgressETA {
     [datetime]$startTime,
     #Active step being processed
     [string]$currentStep,
-    #passthru for nested progress bars
+    #pass thru for nested progress bars
     [int]$ID,
-    #passthru for nested progress bars
+    #pass thru for nested progress bars
     [int]$ParentId
   ) 
   $currentTime=Get-Date
-  $comppct=$CurrentItemCount/$TotalItemCount
-  if ($comppct -le 0) {
+  $compPct=$CurrentItemCount/$TotalItemCount
+  if ($compPct -le 0) {
     $totalTime=0.0
     $ETA="Unknown"
-    $comppctDisp = "0.0"
+    $compPctDsp = "0.0"
   }
   else {
-    $totalTime=[math]::round(($currentTime-$startTime).TotalSeconds/$comppct,2)
+    $totalTime=[math]::round(($currentTime-$startTime).TotalSeconds/$compPct,2)
     $ETA=$startTime.AddSeconds($totalTime).ToString("dd-MMM-yyyy HH:mm")
-    $comppctDisp=[math]::round($comppct*100,1).ToString("0.0")
+    $compPctDsp=[math]::round($compPct*100,1).ToString("0.0")
   }
   if (!($CurrentStep)) { $currentStep = "$currentItemCount/$TotalItemCount"}
   if (-not($ParentId) -and -not($id)) { $ID=1}
-  $Activity="[$comppctDisp% Complete, ETA: $($ETA)]" 
-  $padlength = 115 - $currentStep.length - $Activity.length
-  if ($padlength -le 0) { $padding ='' } else { $padding = '.' * $padlength }
-  write-progress -Status "$($currentStep+$padding)" -Activity $Activity -PercentComplete $comppctDisp -ParentId $ParentId -ID $ID
-  return $($currenttime - $starttime |select Hours,minutes,seconds)
+  $Activity="[$compPctDsp% Complete, ETA: $($ETA)]" 
+  $padLength = 115 - $currentStep.length - $Activity.length
+  if ($padLength -le 0) { $padding ='' } else { $padding = '.' * $padLength }
+  write-progress -Status "$($currentStep+$padding)" -Activity $Activity -PercentComplete $compPctDsp -ParentId $ParentId -ID $ID
+  return $($currentTime - $starttime |Select-Object Hours,minutes,seconds)
 }
