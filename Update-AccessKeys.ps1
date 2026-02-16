@@ -2,6 +2,7 @@
 Param(
   [Parameter(mandatory=$true,ValueFromPipelineByPropertyName=$true)][string]$userName,
   [Parameter(mandatory=$true,ValueFromPipelineByPropertyName=$true)][string]$profileName,
+  [Parameter(mandatory=$false,ValueFromPipelineByPropertyName=$true)][switch]$force,
   [Parameter(mandatory=$false)][ValidateSet("Credential","File")][string]$outputType = "File",
   [Parameter(mandatory=$false)][string]$outputPath = "$home\AWSNewAccessKeys"
 )
@@ -14,7 +15,7 @@ process {
   #check if key is over 90 days old
   if ($oldKey) { $keyAge = (Get-Date) - $oldKey.CreateDate }
   
-  if ($keyAge.Days -lt 90 -and $oldKey) {
+  if ($keyAge.Days -lt 90 -and $oldKey -and -not $force) {
     write-host "Access key for $userName in $profileName is only $($keyAge.Days) days old. Rotation not needed (requires 90+ days)." -ForegroundColor Yellow
     return
   }
