@@ -3,7 +3,7 @@ Param(
   [Parameter(mandatory=$true,ValueFromPipelineByPropertyName=$true)][string]$userName,
   [Parameter(mandatory=$true,ValueFromPipelineByPropertyName=$true)][string]$profileName,
   [Parameter(mandatory=$false,ValueFromPipelineByPropertyName=$true)][switch]$force,
-  [Parameter(mandatory=$false)][ValidateSet("Credential","File")][string]$outputType = "File",
+  [Parameter(mandatory=$false)][ValidateSet("Credential","File","Both")][string]$outputType = "File",
   [Parameter(mandatory=$false)][string]$outputPath = "$home\AWSNewAccessKeys"
 )
 
@@ -34,6 +34,12 @@ process {
     #update credential
     if ($outputType -eq "Credential") {
       Set-AWSCredential -StoreAs $profileName -AccessKey $newKey.AccessKeyId -SecretKey $newKey.SecretAccessKey 
+    }
+    if ($outputType -eq "Both") {
+      Set-AWSCredential -StoreAs $profileName -AccessKey $newKey.AccessKeyId -SecretKey $newKey.SecretAccessKey 
+      $fileName = "$outputPath\${userName}_${profileName}_AccessKey.txt"
+      $newKey | Out-File -FilePath $fileName -Force
+      write-host "Access key saved to: $fileName" -ForegroundColor Cyan
     }
     else {
       $fileName = "$outputPath\${userName}_${profileName}_AccessKey.txt"
